@@ -27,8 +27,9 @@ protected:
 
 	void MoveForward(float val);
 
-	void MoveRight(float val);
+	void MoveRight(float val);	
 
-	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
-	
+	void TurnArround(float val);
+
+	void LookUp(float val);
 };
