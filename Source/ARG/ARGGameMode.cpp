@@ -4,6 +4,15 @@
 #include "ARG.h"
 #include "ARGGameMode.h"
 
+AARGGameMode::AARGGameMode() 
+{
+	//为蓝图角色类设置默认的角色
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Character/Ami_Player"));
+	if (PlayerPawnBPClass.Class != NULL)
+	{
+		DefaultPawnClass = PlayerPawnBPClass.Class;
+	}
+}
 
 void AARGGameMode::BeginPlay() {
 	if (GEngine) {

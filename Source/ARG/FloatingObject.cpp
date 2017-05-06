@@ -8,7 +8,7 @@
 
 AFloatingObject::AFloatingObject()
 {
-	//开启美帧调用函数
+	//开启每帧调用函数
 	PrimaryActorTick.bCanEverTick = true;
 
 }

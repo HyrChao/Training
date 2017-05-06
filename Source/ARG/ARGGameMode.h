@@ -10,6 +10,10 @@ class ARG_API AARGGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+public:
+
+	AARGGameMode();
+
 	virtual void BeginPlay() override;
 		
 };
