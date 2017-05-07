@@ -3,6 +3,7 @@
 
 #include "ARG.h"
 #include "ARGGameMode.h"
+#include "ARGPlayerController.h"
 
 AARGGameMode::AARGGameMode() 
 {
@@ -12,6 +13,8 @@ AARGGameMode::AARGGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+	//设置默认角色控制器
+	PlayerControllerClass = AARGPlayerController::StaticClass();
 }
 
 void AARGGameMode::BeginPlay() {
