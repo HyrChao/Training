@@ -1,5 +1,6 @@
 //2017/05/05
 //by Chao
+//角色行为与角色控制
 
 #include "ARG.h"
 #include "ARGCharacter.h"
@@ -17,6 +18,8 @@ AARGCharacter::AARGCharacter()
 	//设置相机转向率初始值
 	baseTurnRate = 45.f;
 	baseLookUpRate = 45.f;
+	basePlayerTurnRate =0.1f;
+
 
 	////当控制器转向时禁止角色转向，使其只影响相机.
 	bUseControllerRotationPitch = false;
@@ -118,34 +121,50 @@ void AARGCharacter::ReleaseMagic()
 
 void AARGCharacter::MoveForward(float val) 
 {
-
-	if ((Controller != nullptr) && (val != 0.0f))
+	xAxis = val;//储存本次调用时的Xaxis
+	if (val != 0.0f)
 	{
-		//判断向哪是往前,Yaw导航
-		const FRotator rotation = GetControlRotation();
-		FRotator yawRotation(0, rotation.Yaw, 0);
-		//获取向前向量
-		const FVector direction = FRotationMatrix(yawRotation).GetUnitAxis(EAxis::X);
-		//FVector direction = GetActorForwardVector();
+		FVector direction = GetActorForwardVector();
 		//移动
-		AddMovementInput(direction, val*walkRatio);
+		if (val > 0) 
+		{
+			bUseControllerRotationYaw = false;
+			//controller->AddInputVector(direction*val*walkRatio);
+			//跳过MovementComponent，优化速度，此函数最多旋转90度
+			Internal_AddMovementInput(direction*val*walkRatio);//此函数最多旋转90度，不适用于后退
+		}
+		else
+		{
+			bUseControllerRotationYaw = true;//使角色不转向后退
+			Internal_AddMovementInput(direction*val*0.35f);
+		}
 	}
+	else
+		bUseControllerRotationYaw = false;
+
 }
 
 void AARGCharacter::MoveRight(float val)
 {
-
-	if ((Controller != nullptr) && (val != 0.0f))
+	yAxis = val;//储存本次调用时的Yaxis
+	if (val != 0.0f)
 	{
-		//判断向哪是往前,Yaw导航
-		const FRotator rotation = GetControlRotation();
-		FRotator yawRotation(0, rotation.Yaw, 0);
-		//获取向前向量
-		const FVector direction = FRotationMatrix(yawRotation).GetUnitAxis(EAxis::Y);
-		//FVector direction = GetActorRightVector();
-		//移动
-		AddMovementInput(direction, val*walkRatio);
+		//若处于后退状态，功能切换为转换视角
+		if (bUseControllerRotationYaw)
+		{
+			AddControllerYawInput(val * baseTurnRate*-0.5f * GetWorld()->GetDeltaSeconds());
+		}
+		else
+		{
+			FVector direction = GetActorRightVector();
+			//移动
+			//controller->AddInputVector(direction*val*walkRatio);
+			Internal_AddMovementInput(direction*val*walkRatio*basePlayerTurnRate);
+			//摄像机移动
+			AddControllerYawInput(val*walkRatio *115.f*GetWorld()->GetDeltaSeconds());
+		}
 	}
+
 }
 
 void AARGCharacter::Walk()

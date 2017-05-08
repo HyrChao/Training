@@ -1,5 +1,7 @@
 //2017/04/27
 //by Chao
+//角色行为与角色控制
+
 #pragma once
 
 #include "GameFramework/Character.h"
@@ -27,7 +29,13 @@ public:
 	// 构造函数
 	AARGCharacter();
 
-	
+	//动画参数
+	float xAxis;
+	float yAxis;
+
+	bool presseAttack;
+	bool presseMagic;
+
 	// 每帧调用
 	virtual void Tick(float DeltaTime) override;
 
@@ -84,6 +92,7 @@ protected:
 
 	void MoveForward(float val);
 
+
 	void MoveRight(float val);	
 
 	//视角相关
@@ -94,12 +103,9 @@ protected:
 
 private:
 
-	bool presseAttack;
-
-	bool presseMagic;
-
 	float walkRatio;
+	float basePlayerTurnRate;
 
-
-
+	//攻击中的小幅移动速度
+	float attackMoveSpeed;
 };
