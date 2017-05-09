@@ -8,6 +8,11 @@
 UPlayerAnimation::UPlayerAnimation()
 {
 	player = nullptr;
+	startedMontage = false;
+	attackIdleState = false;
+	//获取攻击Montage
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> _attackMontage(TEXT("AnimMontage'/Game/Character/Ami_Montage_Attack.Ami_Montage_Attack'"));
+	attackMontage = _attackMontage.Object;
 }
 
 void UPlayerAnimation::UpdateAnimationProperties()
@@ -25,12 +30,44 @@ void UPlayerAnimation::UpdateAnimationProperties()
 		moveDirection = player->yAxis;
 
 		//更新攻击状态
-		attack = player->presseAttack;
-		magic = player->presseMagic;
+		isAttacking = player->isAttacking;
+		usingMagic = player->usingMagic;
+		presseAttack = player->presseAttack;
+		presseMagic = player->presseMagic;
+		attackIdleState = player->attackIdleState;
+
+		//判断攻击动画是否结束
+		if(!Montage_IsPlaying(attackMontage)&&startedMontage)
+		{
+			ResetMontageDoOnce();
+			player->SetAttackState(false);
+			player->EnterAttackIdleState();
+		}
+
+		//判定是否进入攻击Montage
+		if(isAttacking)
+		{
+			StartAttackMontage();
+		}
 
 	}
 	else
 		player = Cast<AARGCharacter>(TryGetPawnOwner());
+}
+
+void UPlayerAnimation::StartAttackMontage()
+{
+	if (!startedMontage)
+	{
+		startedMontage = true;
+		Montage_Play(attackMontage, 1.f);
+		
+	}
+}
+
+void UPlayerAnimation::ResetMontageDoOnce()
+{
+	startedMontage = false;
 }
 
 

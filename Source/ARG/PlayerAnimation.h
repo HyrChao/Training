@@ -18,35 +18,61 @@ public:
 	UPlayerAnimation();
 
 protected:
-	//跳跃状态传入
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//跳跃状态传入
 	bool isFalling;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//跳跃状态传入
 	bool isJumping;
 
-	//移动速度传入
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//移动速度传入
 	float moveSpeed;
 	
-	//移动方向传入
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//移动方向传入
 	float moveDirection;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//按下攻击
+	bool presseAttack;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//按下魔法
+	bool presseMagic;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	//攻击
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool attack;
+	bool isAttacking;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	//魔法
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool magic;
+	bool usingMagic;
 
-	//更新属性
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	//攻击后休息动画
+	bool attackIdleState;
+
+
+
 	UFUNCTION(BlueprintCallable, Category = "UpdateAnimationProperties")
+	//更新属性
 	void UpdateAnimationProperties();
+
+	//执行一次用函数
+	void StartAttackMontage();
+
+	void ResetMontageDoOnce();
 	
 private:
 
 	AARGCharacter* player;
+
+	UAnimMontage* attackMontage;
+
+	//函数用容器
+	bool startedMontage;
 	
 };

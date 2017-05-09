@@ -32,6 +32,13 @@ AARGCharacter::AARGCharacter()
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 
+	//创建剑并绑定插槽
+	sword = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Sword"));
+	sword->SetupAttachment(GetMesh(),TEXT("Cup_RSocket_Sword"));//将剑绑定至角色的Cup_RSocket_Sword插槽上
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> _sword(TEXT("StaticMesh'/Game/Character/Mesh/Sword_A.Sword_A'"));//获取剑的具体网格
+	if (_sword.Succeeded())
+		sword->SetStaticMesh(_sword.Object);//将网格指定于剑
+
 	//创建相机碰撞(若有碰撞拉近至角色)
 	cameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	cameraBoom->SetupAttachment(RootComponent);
@@ -42,6 +49,9 @@ AARGCharacter::AARGCharacter()
 	followCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	followCamera->SetupAttachment(cameraBoom, USpringArmComponent::SocketName); //将相机置于相机碰撞器的下一层级并让碰撞器控制其方位
 	followCamera->bUsePawnControlRotation = false; //相机旋转不基于控制器的旋转臂
+
+	//杂项值初始化
+	attackIdleState = false;
 }
 
 // 绑定输入函数
@@ -62,7 +72,7 @@ void AARGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AARGCharacter::LookUpAtRate);
 
 	//跳跃
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AARGCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	//奔跑
@@ -70,9 +80,9 @@ void AARGCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	PlayerInputComponent->BindAction("Walk", IE_Released, this, &AARGCharacter::StopWalking);
 
 	//攻击
-	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AARGCharacter::Attack);
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AARGCharacter::PresseAttack);
 	PlayerInputComponent->BindAction("Attack", IE_Released, this, &AARGCharacter::ReleaseAttack);
-	PlayerInputComponent->BindAction("Magic", IE_Pressed, this, &AARGCharacter::Magic);
+	PlayerInputComponent->BindAction("Magic", IE_Pressed, this, &AARGCharacter::PresseMagic);
 	PlayerInputComponent->BindAction("Magic", IE_Released, this, &AARGCharacter::ReleaseMagic);
 
 
@@ -90,21 +100,42 @@ void AARGCharacter::BeginPlay()
 void AARGCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	//isAttacking = false;
+	//usingMagic = false;
 
+}
 
-
+void AARGCharacter::Jump()
+{
+	if(!isAttacking)
+		ACharacter::Jump();
 }
 
 //攻击相关
 
 void AARGCharacter::Attack()
 {
-	presseAttack = true;
+	isAttacking = true;
 }
 
 void AARGCharacter::Magic()
 {
+	usingMagic = true;
+}
+
+void AARGCharacter::PresseAttack()
+{
+	presseAttack = true;
+	if(!bWasJumping)
+		isAttacking = true;
+}
+
+void AARGCharacter::PresseMagic()
+{
 	presseMagic = true;
+	if (!bWasJumping)
+		usingMagic = true;
 }
 
 void AARGCharacter::ReleaseAttack()
@@ -115,6 +146,16 @@ void AARGCharacter::ReleaseAttack()
 void AARGCharacter::ReleaseMagic()
 {
 	presseMagic = false;
+}
+
+void AARGCharacter::EndAttack() 
+{
+	isAttacking = false;
+}
+
+void AARGCharacter::EndMagic()
+{
+	usingMagic = false;
 }
 
 //移动相关
@@ -161,7 +202,7 @@ void AARGCharacter::MoveRight(float val)
 			//controller->AddInputVector(direction*val*walkRatio);
 			Internal_AddMovementInput(direction*val*walkRatio*basePlayerTurnRate);
 			//摄像机移动
-			AddControllerYawInput(val*walkRatio *115.f*GetWorld()->GetDeltaSeconds());
+			AddControllerYawInput(val*walkRatio *85.f*GetWorld()->GetDeltaSeconds());
 		}
 	}
 
@@ -169,7 +210,7 @@ void AARGCharacter::MoveRight(float val)
 
 void AARGCharacter::Walk()
 {
-	walkRatio = 0.24f;
+	walkRatio = 0.38f;
 }
 
 void AARGCharacter::StopWalking()
@@ -193,5 +234,44 @@ void AARGCharacter::LookUpAtRate(float rate)
 	AddControllerPitchInput(rate * baseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
+void AARGCharacter::EnterAttackIdleState()
+{
+	attackIdleState = true;
+	GetWorldTimerManager().SetTimer(Timer, this, &AARGCharacter::EndAttackIdleState, 0.8f /*Time you want*/, false /*if you want loop set to true*/);//计时开始以后XX秒调用函数，若最后参数为true则循环
+	//GetWorldTimerManager().ClearTimer(Timer);
+	//GetWorldTimerManager().ClearTimer(attackTimer);若定时器循环执行，用此函数终止
+}
 
+void AARGCharacter::EndAttackIdleState()
+{
+	attackIdleState = false;
+}
+
+//功能函数
+//void AARGCharacter::DoOnce(PlayerAction act)
+//{
+//	if (canDoOnce)
+//	{
+//		canDoOnce = false;
+//		switch (act) 
+//		{
+//		case Attack1:
+//			Attack();
+//			if (GEngine)
+//				GEngine->AddOnScreenDebugMessage(-1, 8.f, FColor::Red, TEXT("canDoOnce"));
+//			break;
+//		case Magic1:
+//			Magic();
+//			break;
+//		default:
+//			break;
+//		}
+//	}
+//}
+//
+//void AARGCharacter::ResetDoOnce()
+//{
+//	canDoOnce = true;
+//}
+	
 
