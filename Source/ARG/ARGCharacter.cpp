@@ -162,7 +162,7 @@ void AARGCharacter::EndMagic()
 
 void AARGCharacter::MoveForward(float val) 
 {
-	xAxis = val;//储存本次调用时的Xaxis
+	xAxis = val*walkRatio;//储存本次调用时的Xaxis
 	if (val != 0.0f)
 	{
 		FVector direction = GetActorForwardVector();
@@ -172,7 +172,7 @@ void AARGCharacter::MoveForward(float val)
 			bUseControllerRotationYaw = false;
 			//controller->AddInputVector(direction*val*walkRatio);
 			//跳过MovementComponent，优化速度，此函数最多旋转90度
-			Internal_AddMovementInput(direction*val*walkRatio);//此函数最多旋转90度，不适用于后退
+			Internal_AddMovementInput(direction*xAxis);//此函数最多旋转90度，不适用于后退
 		}
 		else
 		{
@@ -187,7 +187,7 @@ void AARGCharacter::MoveForward(float val)
 
 void AARGCharacter::MoveRight(float val)
 {
-	yAxis = val;//储存本次调用时的Yaxis
+	yAxis = val*walkRatio;//储存本次调用时的Yaxis
 	if (val != 0.0f)
 	{
 		//若处于后退状态，功能切换为转换视角
@@ -200,9 +200,9 @@ void AARGCharacter::MoveRight(float val)
 			FVector direction = GetActorRightVector();
 			//移动
 			//controller->AddInputVector(direction*val*walkRatio);
-			Internal_AddMovementInput(direction*val*walkRatio*basePlayerTurnRate);
+			Internal_AddMovementInput(direction*yAxis*basePlayerTurnRate);
 			//摄像机移动
-			AddControllerYawInput(val*walkRatio *85.f*GetWorld()->GetDeltaSeconds());
+			AddControllerYawInput(yAxis *85.f*GetWorld()->GetDeltaSeconds());
 		}
 	}
 
@@ -210,7 +210,7 @@ void AARGCharacter::MoveRight(float val)
 
 void AARGCharacter::Walk()
 {
-	walkRatio = 0.38f;
+	walkRatio = 0.72f;
 }
 
 void AARGCharacter::StopWalking()

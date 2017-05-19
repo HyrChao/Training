@@ -20,9 +20,9 @@ AItemPickup::AItemPickup()
 
 }
 
-AItemPickup::OnPickedUp()
+void AItemPickup::OnPickedUp()
 {
-
+	Destroy();
 }
 
 //游戏开始调用

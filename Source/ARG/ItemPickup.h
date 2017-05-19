@@ -28,9 +28,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Pickup)
 	UStaticMeshComponent* pickupMesh;
 
-
-	UFUNCTION(BlueprintNativeEvent)
-	void OnPickedUp();
+	//UFUNCTION(BlueprintNativeEvent)
+	virtual void OnPickedUp();
 
 
 
